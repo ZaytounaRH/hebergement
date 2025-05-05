@@ -33,7 +33,7 @@ WORKDIR /app
 COPY . .
 
 # Installer les dépendances PHP (prod uniquement) sans exécuter les scripts bloquants
-RUN composer install --no-interaction --no-dev --optimize-autoloader --no-scripts
+RUN composer install --no-interaction --no-dev --optimize-autoloader 
 
 # Commande de démarrage (serveur PHP natif)
 CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
