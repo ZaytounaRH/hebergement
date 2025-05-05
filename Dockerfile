@@ -1,31 +1,31 @@
-# Étape 1 : Image de base PHP avec extensions nécessaires
-FROM php:8.1-cli
+FROM php:8.2-cli
 
-# Installation des dépendances système nécessaires
+# Installer les extensions système requises
 RUN apt-get update && apt-get install -y \
-    git unzip zip curl libzip-dev libicu-dev libonig-dev libxml2-dev \
-    libpng-dev libjpeg-dev libfreetype6-dev libpq-dev \
+    unzip \
+    git \
+    zlib1g-dev \
+    libzip-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libicu-dev \
+    libxslt-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     wkhtmltopdf \
-    && docker-php-ext-install intl pdo pdo_mysql zip opcache \
-    && pecl install xdebug && docker-php-ext-enable xdebug
+    && docker-php-ext-install pdo pdo_mysql zip intl xml gd bcmath opcache \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg
 
-# Installation de Composer
+# Installer Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Configuration du dossier de travail
-WORKDIR /var/www/html
-
-# Copie du projet Symfony
+# Copier les fichiers
+WORKDIR /app
 COPY . .
 
-# Installation des dépendances PHP
+# Installer les dépendances PHP (prod uniquement)
 RUN composer install --no-interaction --no-dev --optimize-autoloader
 
-# Permissions
-RUN chmod -R 755 var && chmod -R 755 public
-
-# Port par défaut (facultatif)
-EXPOSE 8000
-
-# Commande par défaut
+# Commande de démarrage
 CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
