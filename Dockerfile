@@ -14,18 +14,26 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     libfreetype6-dev \
     wkhtmltopdf \
+    curl \
     && docker-php-ext-install pdo pdo_mysql zip intl xml gd bcmath opcache \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && rm -rf /var/lib/apt/lists/*
 
-# Installer Composer
+# Installer le binaire Symfony CLI (nécessaire pour symfony-cmd)
+RUN curl -sS https://get.symfony.com/cli/installer | bash \
+    && mv /root/.symfony*/bin/symfony /usr/local/bin/symfony
+
+# Copier Composer depuis l'image officielle
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copier les fichiers
+# Définir le dossier de travail
 WORKDIR /app
+
+# Copier les fichiers du projet
 COPY . .
 
-# Installer les dépendances PHP (prod uniquement)
-RUN composer install --no-interaction --no-dev --optimize-autoloader
+# Installer les dépendances PHP (prod uniquement) sans exécuter les scripts bloquants
+RUN composer install --no-interaction --no-dev --optimize-autoloader --no-scripts
 
-# Commande de démarrage
+# Commande de démarrage (serveur PHP natif)
 CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
