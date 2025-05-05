@@ -1,0 +1,114 @@
+{% extends 'back.html.twig' %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">🎯 Tableau de bord RH</h5>
+                    <p class="text-muted m-b-0">Bienvenue sur ZaytounaRH – {{ "now"|date("d/m/Y") }}</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <ul class="breadcrumb float-end">
+                    <li class="breadcrumb-item">
+                        <a href="{{ path('admin_dashboard') }}"><i class="fa fa-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item active">Dashboard</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques principales -->
+<div class="row">
+    {% set stats = [
+        {'icon': 'graduation-cap', 'color': 'purple', 'count': nombreFormations, 'label': 'Formations'},
+        {'icon': 'briefcase', 'color': 'green', 'count': nombreOffre, 'label': "Offres d'emploi"},
+        {'icon': 'comments', 'color': 'red', 'count': nombreEntretien, 'label': 'Entretiens'},
+        {'icon': 'shield-alt', 'color': 'blue', 'count': nombreAssurance, 'label': 'Assurances'},
+        {'icon': 'calendar-check', 'color': 'orange', 'count': nombreConge, 'label': 'Congés'},
+        {'icon': 'certificate', 'color': 'teal', 'count': nombreCertif, 'label': 'Certifications'},
+        {'icon': 'coins', 'color': 'red', 'count': nombreBudget, 'label': 'Budgets'},
+        {'icon': 'users', 'color': 'blue', 'count': nombreEmployee, 'label': 'Employés'}
+    ] %}
+
+    {% for stat in stats %}
+        <div class="col-md-6 col-xl-3 mb-4">
+            <div class="card shadow-sm border-left-{{ stat.color }}">
+                <div class="card-body d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-{{ stat.icon }} text-c-{{ stat.color }} f-30"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">{{ stat.count }}</h5>
+                        <p class="text-muted mb-0">{{ stat.label }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Graphique de performance des RH -->
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>📊 Répartition des formations</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="formationChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>📈 Certifications par mois</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="certifChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx1 = document.getElementById('formationChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: ['Formations', "Offres d'emploi", 'Entretiens'],
+                datasets: [{
+                    label: 'RH Data',
+                    data: [{{ nombreFormations }}, {{ nombreOffre }}, {{ nombreEntretien }}],
+                    backgroundColor: ['#6f42c1', '#28a745', '#dc3545']
+                }]
+            }
+        });
+
+        const ctx2 = document.getElementById('certifChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+                datasets: [{
+                    label: 'Certifications',
+                    data: [3, 6, 4, 5, 7, {{ nombreCertif }}],
+                    backgroundColor: '#17a2b8'
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
