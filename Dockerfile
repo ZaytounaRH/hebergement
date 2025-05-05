@@ -1,6 +1,7 @@
 FROM php:8.2-cli
 
 # Installer les extensions système nécessaires
+ 752faf9 (Ajout des fichiers manquants, y compris autoload_runtime.php)
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
@@ -41,6 +42,16 @@ COPY .env .env
 
 # Installer les dépendances PHP avec Composer (en excluant les scripts qui nécessitent des plugins root)
 RUN composer install --no-interaction --no-dev --optimize-autoloader --no-plugins
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql zip intl xml gd bcmath opcache
 
-# Commande de démarrage
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+COPY . .
+
+RUN composer install --no-interaction --no-dev --optimize-autoloader
+ 752faf9 (Ajout des fichiers manquants, y compris autoload_runtime.php)
+
 CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
