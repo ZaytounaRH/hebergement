@@ -1,7 +1,7 @@
 FROM php:8.2-cli
 
 # Installer les extensions système nécessaires
- 752faf9 (Ajout des fichiers manquants, y compris autoload_runtime.php)
+  (Ajout des fichiers manquants, y compris autoload_runtime.php)
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
