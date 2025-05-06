@@ -1,7 +1,6 @@
 FROM php:8.2-cli
 
 # Installer les extensions système nécessaires
- 752faf9 (Ajout des fichiers manquants, y compris autoload_runtime.php)
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
@@ -52,6 +51,5 @@ WORKDIR /app
 COPY . .
 
 RUN composer install --no-interaction --no-dev --optimize-autoloader
- 752faf9 (Ajout des fichiers manquants, y compris autoload_runtime.php)
 
 CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
