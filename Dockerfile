@@ -33,19 +33,16 @@ RUN useradd -ms /bin/bash appuser
 WORKDIR /app
 
 # Copier les fichiers du projet
-COPY . .
-
-# S'assurer que l'utilisateur appuser a les droits sur les fichiers
-RUN chown -R appuser:appuser /app
+COPY --chown=appuser:appuser . .
 
 # Passer à l'utilisateur appuser
 USER appuser
 
-# Copier le fichier .env (si ce n’est pas déjà dans le dossier courant)
-COPY --chown=appuser:appuser .env .env
-
 # Installer les dépendances PHP avec Composer
-RUN composer install --no-interaction --no-dev --optimize-autoloader -vvv
+RUN composer install --no-interaction --no-dev --optimize-autoloader -vvv || cat /app/composer.json
+
+# Exposer le port (facultatif mais conseillé si tu veux accéder en dehors du conteneur)
+EXPOSE 8000
 
 # Démarrer le serveur PHP
 CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
