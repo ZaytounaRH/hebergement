@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     wkhtmltopdf \
     curl \
-    && docker-php-ext-install pdo pdo_mysql zip intl xml gd bcmath opcache \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql zip intl xml gd bcmath opcache \
     && rm -rf /var/lib/apt/lists/*
 
 # Installer Symfony CLI
@@ -26,7 +26,7 @@ RUN curl -sS https://get.symfony.com/cli/installer | bash \
 # Copier Composer depuis l'image officielle de Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Créer un utilisateur non-root et changer les permissions pour éviter les erreurs de plugins root
+# Créer un utilisateur non-root
 RUN useradd -ms /bin/bash appuser
 USER appuser
 
@@ -36,20 +36,11 @@ WORKDIR /app
 # Copier les fichiers du projet
 COPY . .
 
-# Copier le fichier .env (important pour cache:clear et d'autres commandes)
+# Copier le fichier .env
 COPY .env .env
 
-# Installer les dépendances PHP avec Composer (en excluant les scripts qui nécessitent des plugins root)
+# Installer les dépendances PHP avec Composer
 RUN composer install --no-interaction --no-dev --optimize-autoloader --no-plugins
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql zip intl xml gd bcmath opcache
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-WORKDIR /app
-
-COPY . .
-
-RUN composer install --no-interaction --no-dev --optimize-autoloader
-
+# Démarrer le serveur PHP
 CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
