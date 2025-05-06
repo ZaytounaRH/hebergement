@@ -1,47 +1,51 @@
-# Étape 1 : build des dépendances PHP
-FROM composer:2.6 as vendor
+FROM php:8.2-cli
 
+# Installer les extensions système nécessaires
+RUN apt-get update && apt-get install -y \
+    unzip \
+    git \
+    zlib1g-dev \
+    libzip-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libicu-dev \
+    libxslt-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    wkhtmltopdf \
+    curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql zip intl xml gd bcmath opcache \
+    && rm -rf /var/lib/apt/lists/*
+
+# Installer Symfony CLI
+RUN curl -sS https://get.symfony.com/cli/installer | bash \
+    && mv /root/.symfony*/bin/symfony /usr/local/bin/symfony
+
+# Copier Composer depuis l'image officielle
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Créer un utilisateur non-root
+RUN useradd -ms /bin/bash appuser
+
+# Définir le répertoire de travail
 WORKDIR /app
 
-# Copie uniquement les fichiers nécessaires à composer install
-COPY composer.json composer.lock ./
-
-# Installe les dépendances dans le dossier vendor (prod uniquement)
-RUN composer install --no-dev --prefer-dist --no-progress --optimize-autoloader
-
-# Étape 2 : image d'exécution PHP
-FROM php:8.2-fpm-alpine
-
-# Install des extensions PHP et dépendances système
-RUN apk add --no-cache \
-        bash \
-        icu-dev \
-        libxml2-dev \
-        oniguruma-dev \
-        zlib-dev \
-    && docker-php-ext-install intl pdo pdo_mysql xml opcache
-
-# Définir le dossier de travail
-WORKDIR /app
-
-# Copie du code source de l’application
+# Copier les fichiers du projet
 COPY . .
 
-# Copie des vendors installés dans l'étape précédente
-COPY --from=vendor /app/vendor /app/vendor
+# S'assurer que l'utilisateur appuser a les droits sur les fichiers
+RUN chown -R appuser:appuser /app
 
-# Copier un fichier .env spécifique si nécessaire (ex: .env.prod ou .env.local)
-# Ou créer un .env vide pour éviter l'erreur
-RUN if [ ! -f .env ]; then cp .env.dist .env; fi
+# Passer à l'utilisateur appuser
+USER appuser
 
-# Supprime le cache (si existant)
-RUN php bin/console cache:clear --no-warmup || true
+# Copier le fichier .env (si ce n’est pas déjà dans le dossier courant)
+COPY --chown=appuser:appuser .env .env
 
-# Chmod pour éviter les problèmes de permission
-RUN chmod -R 755 var
+# Installer les dépendances PHP avec Composer
+RUN composer install --no-interaction --no-dev --optimize-autoloader -vvv
 
-# Expose le port
-EXPOSE 9000
-
-# Commande par défaut
-CMD ["php-fpm"]
+# Démarrer le serveur PHP
+CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
