@@ -7,5 +7,3 @@ COPY . /var/www/html/
 # Donner les bons droits d’accès
 RUN chown -R www-data:www-data /var/www/html
 
-# Exposer le port 80 (utilisé par Apache)
-EXPOSE 80
